@@ -273,14 +273,14 @@ const server = http.createServer((req, res) => {
 process.on('exit', () => { if (tunnelProcess) tunnelProcess.kill(); });
 process.on('SIGINT', () => { process.exit(); });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
     const center = (t, w = 51) => "║" + t.padStart((w + t.length) / 2).padEnd(w) + "║";
     console.log(`
 ╔═══════════════════════════════════════════════════╗
 ${center("StreamBDIX")}
 ╠═══════════════════════════════════════════════════╣
 ${center("")}
-${center(`http://127.0.0.1:${PORT}`)}
+${center(`http://0.0.0.0:${PORT}`)}
 ${center("")}
 ${center("Keep terminal open while streaming")}
 ${center("Press Ctrl+C to stop")}
