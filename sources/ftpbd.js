@@ -1,7 +1,7 @@
 // StreamBDIX - By Corpse
 const { extractQuality, titlesMatch, extractYear, axios } = require("./utils");
 const SOURCE_NAME = "FTPBD";
-const FTPBD_URL = "https://old.ftpbd.net";
+const FTPBD_URL = "http://old.ftpbd.net";
 
 // Function to search for content on ftpbd.net
 async function searchContent(query, type) {
@@ -201,7 +201,9 @@ async function getMovieStreams(title, year) {
     if (!isPlayable) continue;
     if (seen.has(link)) continue;
     seen.add(link);
-    streams.push({ name: SOURCE_NAME, title: extractQuality(link), url: link });
+    // Prefer http scheme when available for FTPBD hosts
+    const normalized = link.replace(/^https:\/\//i, 'http://');
+    streams.push({ name: SOURCE_NAME, title: extractQuality(normalized), url: normalized });
   }
 
   return streams;
@@ -239,7 +241,8 @@ async function getSeriesStreams(title, season, episode) {
     if (!isPlayable) continue;
     if (seen.has(link)) continue;
     seen.add(link);
-    streams.push({ name: SOURCE_NAME, title: extractQuality(link), url: link });
+    const normalized = link.replace(/^https:\/\//i, 'http://');
+    streams.push({ name: SOURCE_NAME, title: extractQuality(normalized), url: normalized });
   }
 
   return streams;

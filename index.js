@@ -11,7 +11,7 @@ const { spawn, execSync } = require("child_process");
 const PORT = process.env.PORT || 7001;
 
 const SOURCES = {
-  ftpbd: { name: "FTPBD", urls: ["https://old.ftpbd.net/", "http://old.ftpbd.net/"] },
+  ftpbd: { name: "FTPBD", urls: ["http://old.ftpbd.net/", "https://old.ftpbd.net/", "http://server2.ftpbd.net/"] },
 };
 
 const dataDir = () =>
