@@ -556,12 +556,7 @@
     </div>
     <script>
         const SOURCES = {
-            dflix: { name: 'Dflix', desc: 'Movies & Series' },
-            dhakaflix: { name: 'DhakaFlix', desc: 'Movies & Series' },
-            roarzone: { name: 'RoarZone', desc: 'Movies & Series (Emby)' },
-            ftpbd: { name: 'FTPBD', desc: 'Movies & Series (Emby)' },
-            circleftp: { name: 'CircleFTP', desc: 'Movies & Series' },
-            iccftp: { name: 'ICC FTP', desc: 'Movies & Series' }
+            ftpbd: { name: 'FTPBD', desc: 'Movies & Series' }
         };
         let enabled = [];
         let forcedSources = [];
@@ -590,7 +585,9 @@
                 const r = await fetch('/api/config');
                 const d = await r.json();
                 enabled = d.sources || Object.keys(SOURCES);
-                forcedSources = d.forcedSources || [];
+                // Ensure only ftpbd remains enabled/forced in UI
+                enabled = enabled.filter(k => k === 'ftpbd');
+                forcedSources = (d.forcedSources || []).filter(k => k === 'ftpbd');
                 tunnelEnabled = d.tunnelEnabled || false;
                 hasToken = d.hasToken || false;
                 tunnelActive = d.tunnelActive || false;

@@ -57,24 +57,19 @@ async function extractDirectLinks(pageUrl) {
 
     // Look for direct download links
     const directLinkRegex =
-      /<a[^>]*href=["']([^"']*(?:\.mkv|\.mp4|\.avi|\.mov|\.wmv)[^"']*)["'][^>]*>/gi;
+      /<a[^>]*href=["']([^"']+)["'][^>]*>/gi;
 
     const directLinks = [];
     let match;
     while ((match = directLinkRegex.exec(html)) !== null) {
       const link = match[1];
-      if (
-        link &&
-        !link.includes("javascript:") &&
-        !directLinks.includes(link)
-      ) {
-        directLinks.push(link);
-      }
+      if (!link || link.includes("javascript:")) continue;
+      if (!directLinks.includes(link)) directLinks.push(link);
     }
 
     // Also look for links in different formats
     const altLinkRegex =
-      /(?:download|watch|link)[^>]*href=["']([^"']*(?:\.mkv|\.mp4|\.avi|\.mov|\.wmv)[^"']*)["']/gi;
+      /(?:download|watch|link)[^>]*href=["']([^"']+)["']/gi;
     while ((match = altLinkRegex.exec(html)) !== null) {
       const link = match[1];
       if (
@@ -149,15 +144,15 @@ async function extractEpisodeLinks(pageUrl, season, episode) {
   }
 }
 
-async function getMovieStreams(name, year) {
-  const searchResults = await searchContent(name, "movie");
+async function getMovieStreams(title, year) {
+  const searchResults = await searchContent(title, "movie");
 
   if (searchResults.length === 0) return [];
 
   // Find the best matching result
   let bestResult = null;
   for (const result of searchResults) {
-    if (titlesMatch(result.title, name)) {
+    if (titlesMatch(result.title, title)) {
       if (year && result.year) {
         if (Math.abs(parseInt(result.year) - year) <= 1) {
           bestResult = result;
@@ -181,28 +176,25 @@ async function getMovieStreams(name, year) {
   const seen = new Set();
 
   for (const link of directLinks) {
-    if (!seen.has(link)) {
-      seen.add(link);
-      streams.push({
-        name: SOURCE_NAME,
-        title: extractQuality(link),
-        url: link,
-      });
-    }
+    const isPlayable = /\.(mkv|mp4|avi|mov|wmv)(\?|#|$)/i.test(link) || /^magnet:\/\//i.test(link);
+    if (!isPlayable) continue;
+    if (seen.has(link)) continue;
+    seen.add(link);
+    streams.push({ name: SOURCE_NAME, title: extractQuality(link), url: link });
   }
 
   return streams;
 }
 
-async function getSeriesStreams(name, season, episode) {
-  const searchResults = await searchContent(name, "series");
+async function getSeriesStreams(title, season, episode) {
+  const searchResults = await searchContent(title, "series");
 
   if (searchResults.length === 0) return [];
 
   // Find the best matching series result
   let bestResult = null;
   for (const result of searchResults) {
-    if (titlesMatch(result.title, name)) {
+    if (titlesMatch(result.title, title)) {
       bestResult = result;
       break;
     }
@@ -222,14 +214,11 @@ async function getSeriesStreams(name, season, episode) {
   const seen = new Set();
 
   for (const link of episodeLinks) {
-    if (!seen.has(link)) {
-      seen.add(link);
-      streams.push({
-        name: SOURCE_NAME,
-        title: extractQuality(link),
-        url: link,
-      });
-    }
+    const isPlayable = /\.(mkv|mp4|avi|mov|wmv)(\?|#|$)/i.test(link) || /^magnet:\/\//i.test(link);
+    if (!isPlayable) continue;
+    if (seen.has(link)) continue;
+    seen.add(link);
+    streams.push({ name: SOURCE_NAME, title: extractQuality(link), url: link });
   }
 
   return streams;
@@ -238,10 +227,10 @@ module.exports = {
   name: SOURCE_NAME,
   types: ["movie", "series"],
   async getStreams(type, meta, season, episode) {
-    const imdbId = meta.imdb_id || meta.id;
-    const name = meta.name || "";
-    if (!imdbId || !imdbId.startsWith("tt")) return [];
-    if (type === "movie") return await getMovieStreams(imdbId, name);
-    else return await getSeriesStreams(imdbId, name, season, episode);
+    const title = meta.name || meta.title || "";
+    const year = meta.year || (meta.releaseInfo ? parseInt(((meta.releaseInfo+"")||"").match(/\b(19\d{2}|20\d{2})\b/)?.[0]||0) : null);
+    if (!title) return [];
+    if (type === "movie") return await getMovieStreams(title, year);
+    else return await getSeriesStreams(title, season, episode);
   },
 };
