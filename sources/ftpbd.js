@@ -1,7 +1,7 @@
 // StreamBDIX - By Corpse
 const { extractQuality, titlesMatch, extractYear, axios } = require("./utils");
 const SOURCE_NAME = "FTPBD";
-const FTPBD_URL = "https://ftpbd.net";
+const FTPBD_URL = "https://old.ftpbd.net";
 
 // Function to search for content on ftpbd.net
 async function searchContent(query, type) {
