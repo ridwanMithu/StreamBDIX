@@ -6,12 +6,7 @@ const manifest = require('./addon.json');
 const builder = new addonBuilder(manifest);
 
 const allSources = {
-    dflix: require('./sources/dflix'),
-    dhakaflix: require('./sources/dhakaflix'),
-    roarzone: require('./sources/roarzone'),
     ftpbd: require('./sources/ftpbd'),
-    circleftp: require('./sources/circleftp'),
-    iccftp: require('./sources/iccftp'),
 };
 
 function getEnabledSources() {
