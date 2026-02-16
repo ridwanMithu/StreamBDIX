@@ -510,6 +510,24 @@
         <p class="sub">BDIX streaming for Stremio</p>
         <div id="sources"></div>
         <p class="note">Changes are saved automatically</p>
+
+        <div class="box" style="margin-top:16px; background:#0f0f0f">
+            <h2 style="font-size:18px; margin-bottom:12px">Scrape StreamM4U</h2>
+            <div style="display:flex; gap:8px; margin-bottom:10px">
+                <input id="m4uQuery" placeholder="Search title..." style="flex:1; padding:10px; border-radius:8px; background:#1a1a1a; border:1px solid #222; color:#fff; outline:none" />
+                <button class="src-btn show on" onclick="scrapeM4U()">Search</button>
+            </div>
+            <div id="m4uResults" style="display:flex; flex-direction:column; gap:8px"></div>
+        </div>
+
+        <div class="box" style="margin-top:16px; background:#0f0f0f">
+            <h2 style="font-size:18px; margin-bottom:12px">Scrape AnimeKai</h2>
+            <div style="display:flex; gap:8px; margin-bottom:10px">
+                <input id="akaiQuery" placeholder="Search anime..." style="flex:1; padding:10px; border-radius:8px; background:#1a1a1a; border:1px solid #222; color:#fff; outline:none" />
+                <button class="src-btn show on" onclick="scrapeAnimeKai()">Search</button>
+            </div>
+            <div id="akaiResults" style="display:flex; flex-direction:column; gap:8px"></div>
+        </div>
         <div class="btns">
             <div class="url"><span id="manifestUrl"></span><button onclick="copy()">Copy URL</button></div>
             <a id="installBtn" class="btn" href="#">Install to Stremio</a>
@@ -858,6 +876,37 @@
 
         function copy() { navigator.clipboard.writeText(location.origin + '/manifest.json'); toast('Copied to clipboard!') }
         function toast(m, html) { const t = document.getElementById('toast'); if (html) t.innerHTML = m; else t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), html ? 3000 : 1000) }
+
+        async function scrapeM4U() {
+            const q = document.getElementById('m4uQuery').value.trim();
+            if (!q) return;
+            const c = document.getElementById('m4uResults');
+            c.innerHTML = '<div class="stat">Searching...</div>';
+            try {
+                const r = await fetch('/api/scrape/streamm4u?q=' + encodeURIComponent(q));
+                const d = await r.json();
+                if (!Array.isArray(d.items) || d.items.length === 0) {
+                    c.innerHTML = '<div class="stat">No results</div>';
+                    return;
+                }
+                c.innerHTML = d.items.map(it => `<a class="btn" href="${it.url}" target="_blank">${it.title || it.url}</a>`).join('');
+            } catch { c.innerHTML = '<div class="stat">Error</div>'; }
+        }
+        async function scrapeAnimeKai() {
+            const q = document.getElementById('akaiQuery').value.trim();
+            if (!q) return;
+            const c = document.getElementById('akaiResults');
+            c.innerHTML = '<div class="stat">Searching...</div>';
+            try {
+                const r = await fetch('/api/scrape/animekai?q=' + encodeURIComponent(q));
+                const d = await r.json();
+                if (!Array.isArray(d.items) || d.items.length === 0) {
+                    c.innerHTML = '<div class="stat">No results</div>';
+                    return;
+                }
+                c.innerHTML = d.items.map(it => `<a class="btn" href="${it.url}" target="_blank">${it.title || it.url}</a>`).join('');
+            } catch { c.innerHTML = '<div class="stat">Error</div>'; }
+        }
 
         init();
     </script>

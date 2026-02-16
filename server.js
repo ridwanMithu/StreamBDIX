@@ -5,6 +5,71 @@ const axios = require("axios");
 const manifest = require("./addon.json");
 const builder = new addonBuilder(manifest);
 
+// Lightweight HTML helpers
+function extractAnchors(html) {
+  const anchors = [];
+  const re = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const href = m[1];
+    const text = m[2].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    anchors.push({ href, text });
+  }
+  return anchors;
+}
+
+async function fetchHtml(url) {
+  try {
+    const r = await axios.get(url, {
+      timeout: 12000,
+      maxRedirects: 5,
+      validateStatus: () => true,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": url,
+      },
+    });
+    return { status: r.status, html: r.data || "" };
+  } catch (e) {
+    return { status: 0, html: "", error: e.message };
+  }
+}
+
+// API: /api/scrape/streamm4u?q=title
+async function scrapeStreamM4U(q) {
+  const base = "https://streamm4u.com.co";
+  const searchUrl = `${base}/?s=${encodeURIComponent(q)}`;
+  const { status, html, error } = await fetchHtml(searchUrl);
+  if (status !== 200 || !html) return { status, items: [], error };
+
+  const anchors = extractAnchors(html);
+  // Filter typical result anchors to posts
+  const results = anchors
+    .filter(a => /\/\d{4}\/|\/movies\//i.test(a.href) || (a.text && a.text.toLowerCase().includes(q.toLowerCase())))
+    .slice(0, 30)
+    .map(a => ({ title: a.text, url: new URL(a.href, base).toString() }));
+
+  return { status, items: results };
+}
+
+// API: /api/scrape/animekai?q=title
+async function scrapeAnimeKai(q) {
+  const base = "https://animekai.to";
+  const searchUrl = `${base}/?s=${encodeURIComponent(q)}`;
+  const { status, html, error } = await fetchHtml(searchUrl);
+  if (status !== 200 || !html) return { status, items: [], error };
+
+  const anchors = extractAnchors(html);
+  const results = anchors
+    .filter(a => (/\/anime\//i.test(a.href) || /episode|season|watch/i.test(a.text)) && a.text)
+    .slice(0, 30)
+    .map(a => ({ title: a.text, url: new URL(a.href, base).toString() }));
+
+  return { status, items: results };
+}
+
 const allSources = {
   ftpbd: require("./sources/ftpbd"),
 };
@@ -128,4 +193,9 @@ builder.defineStreamHandler(async ({ type, id }) => {
   return { streams };
 });
 
-module.exports = builder.getInterface();
+// Extend interface with custom router using Express-like pattern via stremio-addon-sdk router wrapping is not available here,
+// so the custom endpoints will be handled in index.js HTTP server before delegating to router.
+module.exports = Object.assign(builder.getInterface(), {
+  scrapeStreamM4U,
+  scrapeAnimeKai,
+});

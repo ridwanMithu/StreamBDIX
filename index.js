@@ -326,6 +326,26 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Scraper APIs
+  if (url.pathname === "/api/scrape/streamm4u") {
+    const q = url.searchParams.get("q") || "";
+    const { scrapeStreamM4U } = require("./server");
+    scrapeStreamM4U(q).then(out => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(out));
+    }).catch(() => { res.writeHead(500); res.end("error"); });
+    return;
+  }
+  if (url.pathname === "/api/scrape/animekai") {
+    const q = url.searchParams.get("q") || "";
+    const { scrapeAnimeKai } = require("./server");
+    scrapeAnimeKai(q).then(out => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(out));
+    }).catch(() => { res.writeHead(500); res.end("error"); });
+    return;
+  }
+
   if (url.pathname === "/" || url.pathname === "/index.html") {
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(fs.readFileSync(path.join(__dirname, "public", "index.html")));
