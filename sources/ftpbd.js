@@ -14,7 +14,14 @@ async function searchContent(query, type) {
     const response = await axios.get(
       `${FTPBD_URL}/?s=${searchParams.get("s")}`,
       {
-        timeout: 10000,
+        timeout: 12000,
+        maxRedirects: 5,
+        validateStatus: () => true,
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
       }
     );
 
@@ -50,7 +57,14 @@ async function searchContent(query, type) {
 async function extractDirectLinks(pageUrl) {
   try {
     const response = await axios.get(pageUrl, {
-      timeout: 10000,
+      timeout: 12000,
+      maxRedirects: 5,
+      validateStatus: () => true,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
     });
 
     const html = response.data;
@@ -101,7 +115,14 @@ async function extractDirectLinks(pageUrl) {
 async function extractEpisodeLinks(pageUrl, season, episode) {
   try {
     const response = await axios.get(pageUrl, {
-      timeout: 10000,
+      timeout: 12000,
+      maxRedirects: 5,
+      validateStatus: () => true,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
     });
 
     const html = response.data;
