@@ -162,6 +162,8 @@ updateTunnel();
 
 const addonInterface = require("./server");
 const router = getRouter(addonInterface);
+const s4uRouter = getRouter(addonInterface.stream4uInterface);
+const akaiRouter = getRouter(addonInterface.animekaiInterface);
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -349,6 +351,23 @@ const server = http.createServer((req, res) => {
   if (url.pathname === "/" || url.pathname === "/index.html") {
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(fs.readFileSync(path.join(__dirname, "public", "index.html")));
+    return;
+  }
+
+  if (url.pathname === "/stream4u/manifest.json") {
+    s4uRouter.get('/manifest.json')(req, res);
+    return;
+  }
+  if (url.pathname.startsWith("/stream4u/")) {
+    s4uRouter(req, res, () => { res.writeHead(404); res.end(); });
+    return;
+  }
+  if (url.pathname === "/animekai/manifest.json") {
+    akaiRouter.get('/manifest.json')(req, res);
+    return;
+  }
+  if (url.pathname.startsWith("/animekai/")) {
+    akaiRouter(req, res, () => { res.writeHead(404); res.end(); });
     return;
   }
 

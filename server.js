@@ -5,6 +5,12 @@ const axios = require("axios");
 const manifest = require("./addon.json");
 const builder = new addonBuilder(manifest);
 
+// Additional addon builders for Stream4U and AnimeKai
+const stream4uManifest = require("./stream4u.manifest.json");
+const animekaiManifest = require("./animekai.manifest.json");
+const stream4uBuilder = new addonBuilder(stream4uManifest);
+const animekaiBuilder = new addonBuilder(animekaiManifest);
+
 // Lightweight HTML helpers
 function extractAnchors(html) {
   const anchors = [];
@@ -164,6 +170,7 @@ async function getMetaFromCinemeta(type, imdbId) {
   }
 }
 
+// Default BDIX builder (existing)
 builder.defineStreamHandler(async ({ type, id }) => {
   let imdbId, season, episode;
 
@@ -193,9 +200,57 @@ builder.defineStreamHandler(async ({ type, id }) => {
   return { streams };
 });
 
-// Extend interface with custom router using Express-like pattern via stremio-addon-sdk router wrapping is not available here,
-// so the custom endpoints will be handled in index.js HTTP server before delegating to router.
+// Stream4U: simple search-based catalog and no-op streams placeholder for now
+stream4uBuilder.defineCatalogHandler(async ({ type, id, extra }) => {
+  const search = (extra && extra.search) || "";
+  if (!search) return { metas: [] };
+  const out = await scrapeStreamM4U(search);
+  const metas = (out.items || []).map((it, i) => ({
+    id: `s4u:${Buffer.from(it.url).toString('base64')}`,
+    type: type,
+    name: it.title || it.url,
+    poster: "",
+  }));
+  return { metas };
+});
+stream4uBuilder.defineStreamHandler(async ({ type, id }) => {
+  // id encodes the URL base64
+  try {
+    const b64 = id.split(":")[1] || "";
+    const url = Buffer.from(b64, 'base64').toString('utf8');
+    return { streams: [{ title: 'Open Link', url }] };
+  } catch {
+    return { streams: [] };
+  }
+});
+
+// AnimeKai: search-based catalog and placeholder streams
+animekaiBuilder.defineCatalogHandler(async ({ type, id, extra }) => {
+  const search = (extra && extra.search) || "";
+  if (!search) return { metas: [] };
+  const out = await scrapeAnimeKai(search);
+  const metas = (out.items || []).map((it, i) => ({
+    id: `akai:${Buffer.from(it.url).toString('base64')}`,
+    type: 'series',
+    name: it.title || it.url,
+    poster: "",
+  }));
+  return { metas };
+});
+animekaiBuilder.defineStreamHandler(async ({ type, id }) => {
+  try {
+    const b64 = id.split(":")[1] || "";
+    const url = Buffer.from(b64, 'base64').toString('utf8');
+    return { streams: [{ title: 'Open Link', url }] };
+  } catch {
+    return { streams: [] };
+  }
+});
+
+// Export interfaces for index.js to mount under namespaces
 module.exports = Object.assign(builder.getInterface(), {
   scrapeStreamM4U,
   scrapeAnimeKai,
+  stream4uInterface: stream4uBuilder.getInterface(),
+  animekaiInterface: animekaiBuilder.getInterface(),
 });

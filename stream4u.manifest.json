@@ -1,0 +1,14 @@
+{
+  "id": "com.streambdix.stream4u",
+  "version": "1.0.0",
+  "name": "Stream4U",
+  "description": "Stream4U scraping addon",
+  "logo": "",
+  "resources": ["catalog", "stream"],
+  "types": ["movie", "series"],
+  "idPrefixes": ["s4u"],
+  "catalogs": [
+    { "type": "movie", "id": "s4u.movies", "name": "Stream4U Movies", "extra": [{"name":"search","isRequired":false}] },
+    { "type": "series", "id": "s4u.series", "name": "Stream4U Series", "extra": [{"name":"search","isRequired":false}] }
+  ]
+}

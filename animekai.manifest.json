@@ -1,0 +1,13 @@
+{
+  "id": "com.streambdix.animekai",
+  "version": "1.0.0",
+  "name": "AnimeKai",
+  "description": "AnimeKai scraping addon",
+  "logo": "",
+  "resources": ["catalog", "stream"],
+  "types": ["series"],
+  "idPrefixes": ["akai"],
+  "catalogs": [
+    { "type": "series", "id": "akai.series", "name": "AnimeKai Series", "extra": [{"name":"search","isRequired":false}] }
+  ]
+}
